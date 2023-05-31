@@ -1,0 +1,133 @@
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  wordpress_files:
+    # driver: local
+    # driver_opts:
+    #   device: /Users/aamoussa/goinfre/volmues/wordpress_files
+    #   type: none
+    #   o: bind
+  db_files:
+    # driver: local
+    # driver_opts:
+    #   device: /Users/aamoussa/goinfre/volmues/db_files
+    #   type: none
+    #   o: bind
+
+services:
+  nginx:
+    container_name: nginx
+    build: ./requirements/nginx
+    restart: always
+    image: nginx
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+    pull_policy: never
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress_files:/var/www
+    networks:
+      - mynetwork
+
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    restart: always
+    image: wordpress
+    pull_policy: never
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress_files:/var/www
+    networks:
+      - mynetwork
+
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    restart: always
+    image: mariadb
+    pull_policy: never
+    env_file:
+      - .env
+    volumes:
+      - db_files:/var/lib/mysql
+    networks:
+      - mynetwork
+  
+  # redis:
+  #   container_name: redis
+  #   build: ./requirements/bonus/redis
+  #   restart: always
+  #   image: redis
+  #   pull_policy: never
+  #   depends_on:
+  #     - wordpress
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - mynetwork
+
+  # ftp:
+  #   container_name: ftp
+  #   build: requirements/bonus/ftp
+  #   image: ftp
+  #   restart: always
+  #   ports:
+  #     - "21:21"
+  #     - "40000-40009:40000-40009"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - wordpress_files:/content
+  #   networks:
+  #     - mynetwork
+  #   depends_on:
+  #     - wordpress
+  
+  # adminer:
+  #   container_name: adminer
+  #   build: requirements/bonus/adminer
+  #   image: adminer
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - mynetwork
+  #   depends_on:
+  #     - mariadb
+  
+  # static_website:
+  #   container_name: static_website
+  #   build: requirements/bonus/static_website
+  #   image: static_website
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - mynetwork
+  #   depends_on:
+  #     - nginx
+  
+  # cadvisor:
+  #   container_name: cadvisor
+  #   build: ./requirements/bonus/cadvisor
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - mynetwork
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro 
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #   restart: always
